@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Scheduling Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #confirmation {
+            text-align: center;
+        }
+
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Schedule an Appointment</h1>
+        <form id="appointment-form">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" placeholder="Your Name" required>
+                <div class="error" id="name-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Your Email" required>
+                <div class="error" id="email-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="Your Phone Number" required>
+                <div class="error" id="phone-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="appointment-date">Date</label>
+                <input type="text" id="appointment-date" class="flatpickr" placeholder="Select Date" required>
+                <div class="error" id="date-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="appointment-time">Time</label>
+                <input type="text" id="appointment-time" class="flatpickr" placeholder="Select Time" required>
+                <div class="error" id="time-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="service">Service</label>
+                <select id="service" required>
+                    <option value="">Select a Service</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="therapy">Therapy</option>
+                    <option value="checkup">Check-up</option>
+                </select>
+                <div class="error" id="service-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="notes">Additional Notes</label>
+                <textarea id="notes" rows="3" placeholder="Any additional notes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="captcha">Captcha: 3 + 2 = ?</label>
+                <input type="text" id="captcha" placeholder="Your answer" required>
+                <div class="error" id="captcha-error"></div>
+            </div>
+            <div class="form-group">
+                <label for="timezone">Time Zone</label>
+                <select id="timezone">
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">America/New_York</option>
+                    <option value="Europe/London">Europe/London</option>
+                    <!-- Add more time zones as needed -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="recurrence">Recurrence</label>
+                <select id="recurrence">
+                    <option value="none">None</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="provider">Service Provider</label>
+                <select id="provider" required>
+                    <option value="">Select a Provider</option>
+                    <option value="provider1">Provider 1</option>
+                    <option value="provider2">Provider 2</option>
+                </select>
+            </div>
+            <button type="submit">Confirm Appointment</button>
+        </form>
+        <div id="confirmation" class="hidden">
+            <h2>Appointment Confirmed</h2>
+            <p>Thank you, <span id="confirm-name"></span>!</p>
+            <p>Your appointment for <span id="confirm-service"></span> is scheduled on <span id="confirm-date"></span> at <span id="confirm-time"></span>.</p>
+            <p>A confirmation email has been sent to <span id="confirm-email"></span>.</p>
+            <p>We will contact you at <span id="confirm-phone"></span>.</p>
+            <p>Notes: <span id="confirm-notes"></span></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('#appointment-date', {
+                dateFormat: 'Y-m-d'
+            });
+
+            flatpickr('#appointment-time', {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: 'H:i',
+                time_24hr: true
+            });
+
+            document.getElementById('appointment-form').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                let isValid = true;
+
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const date = document.getElementById('appointment-date').value;
+                const time = document.getElementById('appointment-time').value;
+                const service = document.getElementById('service').value;
+                const notes = document.getElementById('notes').value;
+                const captcha = document.getElementById('captcha').value;
+                const timezone = document.getElementById('timezone').value;
+                const recurrence = document.getElementById('recurrence').value;
+                const provider = document.getElementById('provider').value;
+
+                // Clear previous error messages
+                document.getElementById('name-error').textContent = '';
+                document.getElementById('email-error').textContent = '';
+                document.getElementById('phone-error').textContent = '';
+                document.getElementById('date-error').textContent = '';
+                document.getElementById('time-error').textContent = '';
+                document.getElementById('service-error').textContent = '';
+                document.getElementById('captcha-error').textContent = '';
+
+                if (!name) {
+                    isValid = false;
+                    document.getElementById('name-error').textContent = 'Name is required.';
+                }
+
+                if (!email) {
+                    isValid = false;
+                    document.getElementById('email-error').textContent = 'Email is required.';
+                }
+
+                if (!phone) {
+                    isValid = false;
+                    document.getElementById('phone-error').textContent = 'Phone number is required.';
+                }
+
+                if (!date) {
+                    isValid = false;
+                    document.getElementById('date-error').textContent = 'Date is required.';
+                }
+
+                if (!time) {
+                    isValid = false;
+                    document.getElementById('time-error').textContent = 'Time is required.';
+                }
+
+                if (!service) {
+                    isValid = false;
+                    document.getElementById('service-error').textContent = 'Service is required.';
+                }
+
+                if (!captcha || captcha !== '5') {
+                    isValid = false;
+                    document.getElementById('captcha-error').textContent = 'Captcha is incorrect.';
+                }
+
+                if (isValid) {
+                    // Handle confirmation
+                    document.getElementById('confirm-name').textContent = name;
+                    document.getElementById('confirm-email').textContent = email;
+                    document.getElementById('confirm-phone').textContent = phone;
+                    document.getElementById('confirm-date').textContent = date;
+                    document.getElementById('confirm-time').textContent = time;
+                    document.getElementById('confirm-service').textContent = service;
+                    document.getElementById('confirm-notes').textContent = notes;
+
+                    document.getElementById('appointment-form').classList.add('hidden');
+                    document.getElementById('confirmation').classList.remove('hidden');
+
+                    scheduleReminder(email, date, time);
+                    addEventToGoogleCalendar(date, time, service);
+                }
+            });
+        });
+
+        function scheduleReminder(email, date, time) {
+            const appointmentDateTime = new Date(`${date}T${time}`);
+            const reminderTime = new Date(appointmentDateTime.getTime() - 24 * 60 * 60 * 1000); // 24 hours before
+
+            setTimeout(() => {
+                sendEmailReminder(email, date, time);
+            }, reminderTime - new Date());
+        }
+
+        function sendEmailReminder(email, date, time) {
+            // Logic to send email reminder
+            console.log(`Reminder: Appointment on ${date} at ${time}`);
+        }
+
+        function authenticateGoogleCalendar() {
+            gapi.auth2.getAuthInstance().signIn().then(() => {
+                console.log('Signed in');
+            });
+        }
+
+        function addEventToGoogleCalendar(date, time, service) {
+            const event = {
+                summary: `Appointment: ${service}`,
+                start: {
+                    dateTime: `${date}T${time}:00`,
+                    timeZone: 'America/Los_Angeles'
+                },
+                end: {
+                    dateTime: `${date}T${time}:00`,
+                    timeZone: 'America/Los_Angeles'
+                }
+            };
+
+            gapi.client.calendar.events.insert({
+                calendarId: 'primary',
+                resource: event
+            }).then(response => {
+                console.log('Event created:', response);
+            });
+        }
+    </script>
+</body>
+
+</html>
